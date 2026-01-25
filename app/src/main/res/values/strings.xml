@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">Great Kingdom</string>
+    <string name="title_main">GREAT KINGDOM</string>
+    <string name="btn_game_start">GAME START</string>
+    <string name="btn_exit">EXIT</string>
+    <string name="status_turn_format">현재 차례: %1$s</string>
+    <string name="player_p1">선공 (파랑)</string>
+    <string name="player_p2">후공 (주황)</string>
+    <string name="btn_undo">무르기 (Undo)</string>
+    <string name="btn_pass">패스 (Pass)</string>
+    <string name="dialog_pause_title">일시정지</string>
+    <string name="btn_resume">이어서하기</string>
+    <string name="btn_restart">다시 시작</string>
+    <string name="btn_go_main">메인 화면으로</string>
+    <string name="msg_game_over_siege">공성 성공! %1$s 승리</string>
+    <string name="msg_game_over_pass">연속 패스로 종료되었습니다.\n%1$s</string>
+    <string name="msg_winner_p1">선공 (파랑) 승리! (파랑: %1$d, 주황: %2$d)</string>
+    <string name="msg_winner_p2">후공 (주황) 승리! (파랑: %1$d, 주황: %2$d)</string>
+</resources>
