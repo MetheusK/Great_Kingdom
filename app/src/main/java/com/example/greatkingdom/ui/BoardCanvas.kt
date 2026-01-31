@@ -9,19 +9,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.sp
 import com.example.greatkingdom.GreatKingdomGame
+import com.example.greatkingdom.R
 import com.example.greatkingdom.ui.theme.LastMoveHighlight
-import com.example.greatkingdom.ui.theme.Player1Color
 import com.example.greatkingdom.ui.theme.Player1Territory
-import com.example.greatkingdom.ui.theme.Player2Color
 import com.example.greatkingdom.ui.theme.Player2Territory
 
 @Composable
@@ -35,6 +39,11 @@ fun BoardCanvas(
 ) {
     val textMeasurer = rememberTextMeasurer()
     val boardSize = 9
+    
+    val boardTexture = ImageBitmap.imageResource(id = R.drawable.board_texture_white)
+    val pieceP1 = ImageBitmap.imageResource(id = R.drawable.piece_blue_top)
+    val pieceP2 = ImageBitmap.imageResource(id = R.drawable.piece_red_top)
+    val pieceNeutral = ImageBitmap.imageResource(id = R.drawable.piece_center_top)
 
     Canvas(
         modifier = modifier
@@ -53,15 +62,24 @@ fun BoardCanvas(
     ) {
         val cellSize = size.width / boardSize
 
-        // 1. Draw Grid
-        drawGrid(boardSize, cellSize)
+        // 1. Draw Board Texture
+        drawImage(
+            image = boardTexture,
+            dstSize = IntSize(size.width.toInt(), size.height.toInt())
+        )
 
         // 2. Draw Stones (Castles)
         for (r in 0 until boardSize) {
             for (c in 0 until boardSize) {
                 val cellValue = boardState[r][c]
                 if (cellValue != GreatKingdomGame.EMPTY) {
-                    drawCastle(r, c, cellSize, cellValue)
+                   val pieceImage = when (cellValue) {
+                        GreatKingdomGame.P1 -> pieceP1
+                        GreatKingdomGame.P2 -> pieceP2
+                        GreatKingdomGame.NEUTRAL -> pieceNeutral
+                        else -> pieceP1 // Fallback
+                    }
+                    drawCastleImage(r, c, cellSize, pieceImage)
                 }
             }
         }
@@ -83,36 +101,17 @@ fun BoardCanvas(
     }
 }
 
-private fun DrawScope.drawGrid(boardSize: Int, cellSize: Float) {
-    for (i in 0..boardSize) {
-        val pos = i * cellSize
-        drawLine(
-            color = Color.Black,
-            start = Offset(pos, 0f),
-            end = Offset(pos, size.height),
-            strokeWidth = 5f
-        )
-        drawLine(
-            color = Color.Black,
-            start = Offset(0f, pos),
-            end = Offset(size.width, pos),
-            strokeWidth = 5f
-        )
-    }
-}
-
-private fun DrawScope.drawCastle(row: Int, col: Int, cellSize: Float, type: Int) {
-    val color = when (type) {
-        GreatKingdomGame.P1 -> Player1Color
-        GreatKingdomGame.P2 -> Player2Color
-        else -> Color.Gray
-    }
-    val padding = cellSize * 0.15f
-    drawRoundRect(
-        color = color,
-        topLeft = Offset(col * cellSize + padding, row * cellSize + padding),
-        size = Size(cellSize - padding * 2, cellSize - padding * 2),
-        cornerRadius = androidx.compose.ui.geometry.CornerRadius(20f, 20f)
+private fun DrawScope.drawCastleImage(row: Int, col: Int, cellSize: Float, image: ImageBitmap) {
+    val padding = cellSize * 0.1f
+    val imageSize = cellSize - padding * 2
+    
+    drawImage(
+        image = image,
+        dstOffset = IntOffset(
+            (col * cellSize + padding).toInt(),
+            (row * cellSize + padding).toInt()
+        ),
+        dstSize = IntSize(imageSize.toInt(), imageSize.toInt())
     )
 }
 

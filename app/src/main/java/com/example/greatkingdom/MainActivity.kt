@@ -10,6 +10,7 @@ import android.os.Vibrator
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,20 +37,32 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             GreatKingdomTheme {
-                var currentScreen by remember { mutableStateOf(Screen.MENU) }
+                // Background Image
+                androidx.compose.foundation.layout.Box(
+                    modifier = androidx.compose.ui.Modifier.fillMaxSize()
+                ) {
+                    androidx.compose.foundation.Image(
+                        painter = androidx.compose.ui.res.painterResource(id = R.drawable.app_background),
+                        contentDescription = null,
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                        modifier = androidx.compose.ui.Modifier.matchParentSize()
+                    )
 
-                when (currentScreen) {
-                    Screen.MENU -> MainMenuScreen(
-                        onStartGame = {
-                            viewModel.onRestartClicked()
-                            currentScreen = Screen.GAME
-                        },
-                        onExit = { finish() }
-                    )
-                    Screen.GAME -> GameScreen(
-                        viewModel = viewModel,
-                        onBackToMenu = { currentScreen = Screen.MENU }
-                    )
+                    var currentScreen by remember { mutableStateOf(Screen.MENU) }
+
+                    when (currentScreen) {
+                        Screen.MENU -> MainMenuScreen(
+                            onStartGame = {
+                                viewModel.onRestartClicked()
+                                currentScreen = Screen.GAME
+                            },
+                            onExit = { finish() }
+                        )
+                        Screen.GAME -> GameScreen(
+                            viewModel = viewModel,
+                            onBackToMenu = { currentScreen = Screen.MENU }
+                        )
+                    }
                 }
             }
         }

@@ -1,5 +1,8 @@
 package com.example.greatkingdom.ui
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.material.icons.Icons
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -29,8 +32,7 @@ import com.example.greatkingdom.ui.theme.Player2Territory
 fun MainMenuScreen(onStartGame: () -> Unit, onExit: () -> Unit) {
     Column(
         modifier = Modifier
-            .fillMaxSize()
-            .background(AppBackground), // Dark background
+            .fillMaxSize(), // No background here to let parent Box background show through
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -46,13 +48,14 @@ fun MainMenuScreen(onStartGame: () -> Unit, onExit: () -> Unit) {
             onClick = onStartGame,
             modifier = Modifier
                 .width(220.dp)
-                .height(64.dp)
-                .padding(bottom = 16.dp),
+                .height(64.dp),
             colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
             border = androidx.compose.foundation.BorderStroke(1.dp, Color.White)
         ) {
             Text(text = stringResource(R.string.btn_game_start), fontSize = 18.sp)
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         Button(
             onClick = onExit,
@@ -66,6 +69,7 @@ fun MainMenuScreen(onStartGame: () -> Unit, onExit: () -> Unit) {
         }
     }
 }
+
 
 @Composable
 fun GameScreen(
@@ -81,12 +85,43 @@ fun GameScreen(
 
     var showPauseDialog by remember { mutableStateOf(false) }
 
+    // Pause on Back Button
+    BackHandler(enabled = !showPauseDialog) {
+        showPauseDialog = true
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(AppBackground)
-            .padding(16.dp)
+            .padding(16.dp) // No background, transparent
     ) {
+        // Pause Button (Top Right)
+        // Pause Button (Top Right)
+        IconButton(
+            onClick = { showPauseDialog = true },
+            modifier = Modifier.align(Alignment.TopEnd)
+        ) {
+            // Custom Pause Icon (||)
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(5.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.size(24.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(6.dp)
+                        .fillMaxHeight()
+                        .background(Color.White, shape = androidx.compose.foundation.shape.RoundedCornerShape(2.dp))
+                )
+                Box(
+                    modifier = Modifier
+                        .width(6.dp)
+                        .fillMaxHeight()
+                        .background(Color.White, shape = androidx.compose.foundation.shape.RoundedCornerShape(2.dp))
+                )
+            }
+        }
+
         Column(
             modifier = Modifier.align(Alignment.Center),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -113,7 +148,7 @@ fun GameScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .aspectRatio(1f)
-                    .background(Color(0xFFEEEEEE))
+                    // Removed background(Color(0xFFEEEEEE)) to be clean or use BoardCanvas internal
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -140,8 +175,14 @@ fun GameScreen(
             }
         }
 
-        // Pause/Back handling logic needed?
         // Dialog Overlays
+        if (showPauseDialog) {
+            PauseOverlay(
+                onResume = { showPauseDialog = false },
+                onGoMain = onBackToMenu
+            )
+        }
+
         if (gameOverMessage != null) {
             ResultOverlay(
                 message = gameOverMessage!!,
@@ -161,54 +202,121 @@ fun ResultOverlay(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.8f))
-            .clickable(enabled = false) {}, // Block clicks
+            .background(Color.Black.copy(alpha = 0.7f)) // Darken background
+            .clickable(enabled = false) {},
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(32.dp)
+        // Luxury Card Design
+        Card(
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp),
+            border = androidx.compose.foundation.BorderStroke(3.dp, Color(0xFFFFD700)), // Gold Border
+            elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF212121)) // Dark elegant background
         ) {
-            // Banner color logic
-            val bannerColor = if (message.contains("파랑")) Player1Territory
-            else if (message.contains("주황")) Player2Territory
-            else Color.Gray
-
-            Box(
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .background(bannerColor)
-                    .padding(20.dp),
-                contentAlignment = Alignment.Center
+                    .padding(32.dp)
+                    .width(IntrinsicSize.Max)
+            ) {
+                // Trophy Icon or Decorative Header
+                Text(
+                    text = "🏆",
+                    fontSize = 48.sp,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                // Winner / Message Text
+                // Check if message mentions Red/Blue to style accordingly
+                val highlightColor = if (message.contains("파랑")) Player1Color 
+                                    else if (message.contains("빨강") || message.contains("주황")) Player2Color 
+                                    else Color.White
+
+                Text(
+                    text = message.replace(" 🏆", ""), // Remove trophy if it was in string
+                    color = Color.White,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 28.sp
+                )
+                
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // Action Buttons
+                Button(
+                    onClick = onRestart,
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = highlightColor)
+                ) {
+                    Text("다시 시작", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedButton(
+                    onClick = onGoMain,
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.Gray),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
+                ) {
+                    Text("메인 화면으로", fontSize = 16.sp)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PauseOverlay(
+    onResume: () -> Unit,
+    onGoMain: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black.copy(alpha = 0.7f))
+            .clickable(enabled = false) {},
+        contentAlignment = Alignment.Center
+    ) {
+        Card(
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(24.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color.White), // Simple White border for Pause
+            elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF212121))
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .padding(32.dp)
+                    .width(IntrinsicSize.Max)
             ) {
                 Text(
-                    text = "$message 🏆",
+                    text = stringResource(R.string.dialog_pause_title),
                     color = Color.White,
-                    fontSize = 22.sp,
+                    fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
+                    modifier = Modifier.padding(bottom = 32.dp)
                 )
-            }
 
-            Spacer(modifier = Modifier.height(60.dp))
+                Button(
+                    onClick = onResume,
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2)) // Standard Blue for action
+                ) {
+                    Text(stringResource(R.string.btn_resume), color = Color.White, fontSize = 18.sp)
+                }
 
-            Button(
-                onClick = onRestart,
-                modifier = Modifier.width(220.dp).height(56.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color.LightGray)
-            ) {
-                Text("다시 시작", color = Color.Black)
-            }
+                Spacer(modifier = Modifier.height(16.dp))
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Button(
-                onClick = onGoMain,
-                modifier = Modifier.width(220.dp).height(56.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color.White)
-            ) {
-                Text("메인 화면으로")
+                OutlinedButton(
+                    onClick = onGoMain,
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.Gray),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
+                ) {
+                     Text(stringResource(R.string.btn_go_main), fontSize = 16.sp)
+                }
             }
         }
     }
